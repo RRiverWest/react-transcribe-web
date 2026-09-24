@@ -1,0 +1,12 @@
+services:
+  app:
+    image: node:24-alpine
+    ports:
+      - "80:80"
+    user: "1000:1000"
+    volumes:
+      - ./app/:/home/node/app
+    working_dir: /home/node/app
+    command: npm run dev
+
+    tty: true
