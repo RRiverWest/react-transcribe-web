@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: production/Dockerfile-app
+    # ホストへのポート公開はしない。transcribe-net に接続された
+    # コンテナ(例: 外部公開用のリバースプロキシ/ゲートウェイ)からのみ 80 に到達可能。
+    expose:
+      - "80"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - transcribe-net
+
+  api:
+    build:
+      context: ..
+      dockerfile: production/Dockerfile-api
+    expose:
+      - "3001"
+    environment:
+      - PORT=3001
+      - AWS_REGION=${AWS_REGION:-us-west-2}
+      - LANGUAGE_CODE=${LANGUAGE_CODE:-ja-JP}
+      - MEDIA_SAMPLE_RATE=${MEDIA_SAMPLE_RATE:-44100}
+      # nginx 経由の同一オリジンアクセスを許可
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    env_file:
+      - path: ../api/.env
+        required: false
+    # volumes:
+    #   - ${HOME}/.aws:/home/node/.aws:ro
+    restart: unless-stopped
+    networks:
+      - transcribe-net
+
+# すでに作成済みの外部ネットワーク transcribe-net のみを利用する。
+# これによりホスト経由の直接アクセスを避け、transcribe-net 上の
+# コンテナからのアクセスに限定する。
+networks:
+  transcribe-net:
+    external: true
