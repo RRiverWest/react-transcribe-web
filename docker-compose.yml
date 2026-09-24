@@ -10,3 +10,16 @@ services:
     command: npm run dev
 
     tty: true
+
+  api:
+    image: node:24-alpine
+    ports:
+      - "3001:3001"
+    user: "1000:1000"
+    volumes:
+      - ./api/:/home/node/api
+      - $HOME/.aws:/home/node/.aws
+    working_dir: /home/node/api
+    command: npm run dev
+
+    tty: true
