@@ -24,6 +24,12 @@ services:
     environment:
       - PORT=3001
       - AWS_REGION=${AWS_REGION:-ap-northeast-1}
+      # 一時認証情報 (aws configure export-credentials で取得)。
+      # ホストの環境変数 or ../api/.env から注入する。
+      # 注意: 一時認証情報は数時間で失効する。失効したら再取得して更新すること。
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
       - LANGUAGE_CODE=${LANGUAGE_CODE:-ja-JP}
       - MEDIA_SAMPLE_RATE=${MEDIA_SAMPLE_RATE:-44100}
       # React は別オリジン (app 用ドメイン) から接続するため、
