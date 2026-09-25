@@ -11,7 +11,7 @@ import {
 
 // ---- 設定 (環境変数で上書き可能) ----
 const PORT = Number(process.env.PORT ?? 3001)
-const AWS_REGION = process.env.AWS_REGION ?? 'us-west-2'
+const AWS_REGION = process.env.AWS_REGION ?? 'ap-northeast-1'
 const LANGUAGE_CODE = (process.env.LANGUAGE_CODE ?? 'ja-JP') as LanguageCode
 const SAMPLE_RATE = Number(process.env.MEDIA_SAMPLE_RATE ?? 44100)
 // フロント(Vite)のオリジン。'*' で全許可、カンマ区切りで複数指定可。

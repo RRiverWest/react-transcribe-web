@@ -46,7 +46,7 @@ node --env-file=.env dist/server.js
 | 変数              | 既定値                                  | 説明                              |
 | ----------------- | --------------------------------------- | --------------------------------- |
 | PORT              | 3001                                    | 待ち受けポート                    |
-| AWS_REGION        | us-west-2                               | Transcribe のリージョン           |
+| AWS_REGION        | ap-northeast-1                          | Transcribe のリージョン           |
 | LANGUAGE_CODE     | ja-JP                                   | 文字起こし言語                    |
 | MEDIA_SAMPLE_RATE | 44100                                   | サンプルレート(フロントと一致させる) |
 | CORS_ORIGIN       | \*                                      | 許可オリジン(カンマ区切り)        |
