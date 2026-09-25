@@ -8,6 +8,9 @@ services:
       - ./app/:/home/node/app
     working_dir: /home/node/app
     command: npm run dev
+    environment:
+      # react (Vite) の接続先。未設定なら同一オリジンに接続します。
+      - VITE_SOCKET_URL=${VITE_SOCKET_URL:-http://localhost:3001}
 
     tty: true
 

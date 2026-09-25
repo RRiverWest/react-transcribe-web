@@ -3,12 +3,14 @@ services:
     build:
       context: ..
       dockerfile: production/Dockerfile-app
-    # ホストへのポート公開はしない。transcribe-net に接続された
-    # コンテナ(例: 外部公開用のリバースプロキシ/ゲートウェイ)からのみ 80 に到達可能。
+      args:
+        # Vite はビルド時に VITE_* を埋め込むため build.args で渡す。
+        # React は api のオリジン (Cloudflare Tunnel の api 用ドメイン等) へ
+        # 直接接続する。必ず api の公開 URL を指定すること。
+        # 例: VITE_SOCKET_URL=https://api.example.com
+        - VITE_SOCKET_URL=https://transcribe.rriverwest.net
     expose:
       - "80"
-    depends_on:
-      - api
     restart: unless-stopped
     networks:
       - transcribe-net
@@ -24,7 +26,9 @@ services:
       - AWS_REGION=${AWS_REGION:-us-west-2}
       - LANGUAGE_CODE=${LANGUAGE_CODE:-ja-JP}
       - MEDIA_SAMPLE_RATE=${MEDIA_SAMPLE_RATE:-44100}
-      # nginx 経由の同一オリジンアクセスを許可
+      # React は別オリジン (app 用ドメイン) から接続するため、
+      # そのオリジンを指定する。例: CORS_ORIGIN=https://app.example.com
+      # カンマ区切りで複数指定可。'*' で全許可。
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
     env_file:
       - path: ../api/.env
@@ -35,9 +39,6 @@ services:
     networks:
       - transcribe-net
 
-# すでに作成済みの外部ネットワーク transcribe-net のみを利用する。
-# これによりホスト経由の直接アクセスを避け、transcribe-net 上の
-# コンテナからのアクセスに限定する。
 networks:
   transcribe-net:
     external: true
