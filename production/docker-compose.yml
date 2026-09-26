@@ -32,6 +32,10 @@ services:
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
       - LANGUAGE_CODE=${LANGUAGE_CODE:-ja-JP}
       - MEDIA_SAMPLE_RATE=${MEDIA_SAMPLE_RATE:-44100}
+      # Bedrock 要約設定。BEDROCK_REGION 未指定なら AWS_REGION を流用。
+      - BEDROCK_MODEL_ID=${BEDROCK_MODEL_ID:-anthropic.claude-3-haiku-20240307-v1:0}
+      - BEDROCK_REGION=${BEDROCK_REGION:-}
+      - SUMMARY_MIN_CHARS=${SUMMARY_MIN_CHARS:-200}
       # React は別オリジン (app 用ドメイン) から接続するため、
       # そのオリジンを指定する。例: CORS_ORIGIN=https://app.example.com
       # カンマ区切りで複数指定可。'*' で全許可。

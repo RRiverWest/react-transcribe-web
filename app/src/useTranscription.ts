@@ -7,6 +7,22 @@ interface TranscriptionData {
   isFinal: boolean
 }
 
+// 要約結果イベントの型
+interface SummaryData {
+  summary: string
+}
+interface SummaryErrorData {
+  message: string
+  minChars?: number
+  length?: number
+}
+
+// 要約を許可する最小文字数 (サーバー側 SUMMARY_MIN_CHARS と揃える)。
+// Vite の環境変数で上書き可能。
+const SUMMARY_MIN_CHARS = Number(
+  import.meta.env.VITE_SUMMARY_MIN_CHARS ?? 200,
+)
+
 export type RecordingStatus = 'idle' | 'recording' | 'error'
 
 // 接続先。未指定なら同一オリジン(元の index.html の io() と同じ挙動)
@@ -16,6 +32,10 @@ export function useTranscription() {
   const [status, setStatus] = useState<RecordingStatus>('idle')
   const [statusMessage, setStatusMessage] = useState('Not recording')
   const [transcript, setTranscript] = useState('')
+  // 要約結果と実行中フラグ、要約に関するメッセージ(エラー等)
+  const [summary, setSummary] = useState('')
+  const [isSummarizing, setIsSummarizing] = useState(false)
+  const [summaryMessage, setSummaryMessage] = useState('')
 
   const socketRef = useRef<Socket | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -46,9 +66,23 @@ export function useTranscription() {
       setTranscript((prev) => prev + '\nError: ' + errorMessage)
     })
 
+    socket.on('summary', (data: SummaryData) => {
+      setSummary(data.summary)
+      setSummaryMessage('')
+      setIsSummarizing(false)
+    })
+
+    socket.on('summaryError', (data: SummaryErrorData) => {
+      console.error('Summary error:', data.message)
+      setSummaryMessage(data.message)
+      setIsSummarizing(false)
+    })
+
     return () => {
       socket.off('transcription')
       socket.off('error')
+      socket.off('summary')
+      socket.off('summaryError')
       socket.disconnect()
       socketRef.current = null
     }
@@ -122,7 +156,29 @@ export function useTranscription() {
   const clearTranscript = useCallback(() => {
     finalTranscriptRef.current = ''
     setTranscript('')
+    setSummary('')
+    setSummaryMessage('')
   }, [])
+
+  // 現在の文字起こしが要約可能な長さ(しきい値以上)か
+  const canSummarize = transcript.trim().length >= SUMMARY_MIN_CHARS
+
+  // Bedrock で要約をリクエストする。しきい値未満なら何もしない。
+  const summarize = useCallback(() => {
+    const text = transcript.trim()
+    if (text.length < SUMMARY_MIN_CHARS) {
+      setSummaryMessage(
+        `要約は ${SUMMARY_MIN_CHARS} 文字以上のときに利用できます (現在 ${text.length} 文字)。`,
+      )
+      return
+    }
+    const socket = socketRef.current
+    if (!socket) return
+    setIsSummarizing(true)
+    setSummaryMessage('')
+    setSummary('')
+    socket.emit('summarize', text)
+  }, [transcript])
 
   // アンマウント時に音声リソースを解放
   useEffect(() => cleanupAudio, [cleanupAudio])
@@ -134,5 +190,11 @@ export function useTranscription() {
     startRecording,
     stopRecording,
     clearTranscript,
+    summary,
+    isSummarizing,
+    summaryMessage,
+    canSummarize,
+    summarize,
+    summaryMinChars: SUMMARY_MIN_CHARS,
   }
 }
